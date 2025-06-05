@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MongoDB Collections Viewer</title>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <h1>MongoDB Collections Viewer</h1>
+
+  <label for="collections">Select Collection:</label>
+  <select id="collections"></select>
+
+  <br><br>
+  <label for="searchInput">Search Player Name:</label>
+  <input type="text" id="searchInput" placeholder="Enter player name" />
+
+  <button id="searchBtn">Search</button>
+
+  <h2>Results:</h2>
+  <ul id="resultsList"></ul>
+
+  <script>
+    const apiBase = "http://localhost:3000";
+
+    const collectionsSelect = document.getElementById('collections');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsList = document.getElementById('resultsList');
+
+    async function loadCollections() {
+      const res = await fetch(apiBase + '/collections');
+      const collections = await res.json();
+      collectionsSelect.innerHTML = '';
+      collections.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        collectionsSelect.appendChild(option);
+      });
+    }
+
+    async function fetchDocuments() {
+      const collection = collectionsSelect.value;
+      const search = searchInput.value.trim();
+      const url = new URL(apiBase + '/documents');
+      url.searchParams.append('collection', collection);
+      if (search) url.searchParams.append('search', search);
+
+      const res = await fetch(url);
+      const docs = await res.json();
+
+      resultsList.innerHTML = '';
+      if (!docs.length) {
+        resultsList.textContent = 'No documents found.';
+        return;
+      }
+      docs.forEach(doc => {
+        const li = document.createElement('li');
+        li.textContent = `Player_Name: ${doc.Player_Name || 'N/A'}, Position: ${doc.Player_Position || 'N/A'}, Team: ${doc.Current_Team || 'N/A'}`;
+        resultsList.appendChild(li);
+      });
+    }
+
+    loadCollections();
+    searchBtn.addEventListener('click', fetchDocuments);
+  </script>
+</body>
+</html>
